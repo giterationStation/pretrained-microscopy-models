@@ -293,7 +293,7 @@ def train_segmentation_model(model,
                              multi_gpu=False):
 
     # setup and check parameters
-    assert len(class_values) != 2, "Two classes is binary classification.  Just specify the posative class value."
+    assert len(class_values) != 2, "Two classes is binary classification.  Just specify the positive class value."
     assert patience is not None or epochs is not None, "Need to set patience or epochs to define a stopping point." 
     epochs = 1e10 if epochs is None else epochs # this will basically never be reached.
     patience = 1e10 if patience is None else patience # this will basically never be reached.
@@ -320,6 +320,8 @@ def train_segmentation_model(model,
             'encoder': encoder,
             'train_loss': [],
             'valid_loss': [],
+            'train_class_losses': [],  # New
+            'valid_class_losses': [],  # New
             'train_iou': [],
             'valid_iou': [],
             'max_score': 0,
@@ -381,15 +383,23 @@ def train_segmentation_model(model,
         train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
 
+        total_train_loss = sum(train_logs['DiceBCELoss'])
+        total_valid_loss = sum(valid_logs['DiceBCELoss'])
+
         # update the state
         state['epoch'] = epoch + 1
         state['state_dict'] = model.state_dict()
         state['optimizer'] = optimizer.state_dict()
-        state['train_loss'].append(train_logs['DiceBCELoss'])
-        state['valid_loss'].append(valid_logs['DiceBCELoss'])
+        state['train_loss'].append(total_train_loss)
+        state['valid_loss'].append(total_valid_loss)
+        state['train_class_losses'].append(train_logs['DiceBCELoss'])
+        state['valid_class_losses'].append(valid_logs['DiceBCELoss'])
         state['train_iou'].append(train_logs['iou_score'])
         state['valid_iou'].append(valid_logs['iou_score'])
         
+        print(f"Class-wise Train Losses: {train_logs['DiceBCELoss']}")
+        print(f"Class-wise Validation Losses: {valid_logs['DiceBCELoss']}")
+
         # save the model
         torch.save(state, os.path.join(save_folder, 'checkpoint.pth.tar'))
         
