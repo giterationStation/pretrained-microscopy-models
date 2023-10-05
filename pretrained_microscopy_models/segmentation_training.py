@@ -341,7 +341,6 @@ def train_segmentation_model(model,
                               shuffle=False, num_workers=num_workers, pin_memory=True)
     
     class_weights = torch.tensor([0.5, 1.0, 1.0, 1.0, 2.0]).to(device)  # Adjust these values as needed
-
     loss = losses.DiceBCELoss(weight=0.7, class_weights=class_weights) if loss is None else loss
 
     metrics = [smp.utils.metrics.IoU(threshold=0.5),]

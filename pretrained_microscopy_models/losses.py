@@ -10,12 +10,20 @@ class DiceBCELoss(nn.Module):
 
     def forward(self, inputs, targets, smooth=1):
         inputs = F.sigmoid(inputs)       
-        inputs = inputs.view(-1)
-        targets = targets.view(-1)
+        inputs_flat = inputs.view(-1)
+        targets_flat = targets.view(-1)
         
-        intersection = (inputs * targets).sum()                            
-        dice_loss = 1 - (2.*intersection + smooth)/(inputs.sum() + targets.sum() + smooth)  
-        BCE = F.binary_cross_entropy(inputs, targets, reduction='mean', weight=self.class_weights)
+        intersection = (inputs_flat * targets_flat).sum()                            
+        dice_loss = 1 - (2.*intersection + smooth)/(inputs_flat.sum() + targets_flat.sum() + smooth)  
+        
+        # Compute the weighted BCE loss
+        if self.class_weights is not None:
+            weights = self.class_weights[targets.long()].float()
+            BCE = F.binary_cross_entropy(inputs_flat, targets_flat, reduction='none')
+            BCE = (BCE * weights).mean()
+        else:
+            BCE = F.binary_cross_entropy(inputs_flat, targets_flat, reduction='mean')
+        
         Dice_BCE = self.weight * BCE + (1-self.weight) * dice_loss
         
         return Dice_BCE
