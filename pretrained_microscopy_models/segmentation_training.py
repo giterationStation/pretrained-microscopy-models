@@ -363,6 +363,15 @@ def train_segmentation_model(model,
             self.optimizer.step()
             return total_loss, prediction
         
+    class CustomValidEpoch(smp.utils.train.ValidEpoch):
+        def batch_update(self, x, y):
+            prediction = self.model.forward(x)
+            losses = self.loss(prediction, y)
+            
+            # Sum up the individual losses
+            total_loss = sum(losses)
+            
+            return total_loss, prediction
     # create epoch runners 
     # it is a simple loop of iterating over dataloader`s samples
     train_epoch = CustomTrainEpoch(
@@ -374,7 +383,7 @@ def train_segmentation_model(model,
         verbose=True,
     )
 
-    valid_epoch = smp.utils.train.ValidEpoch(
+    valid_epoch = CustomValidEpoch(
         model, 
         loss=loss, 
         metrics=metrics, 
