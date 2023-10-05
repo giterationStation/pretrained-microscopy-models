@@ -340,8 +340,9 @@ def train_segmentation_model(model,
     valid_loader = DataLoader(validation_dataset, batch_size=val_batch_size, 
                               shuffle=False, num_workers=num_workers, pin_memory=True)
     
-    
-    loss = losses.DiceBCELoss(weight=0.7) if loss is None else loss
+    class_weights = torch.tensor([0.5, 1.0, 1.0, 1.0, 2.0]).to(device)  # Adjust these values as needed
+
+    loss = losses.DiceBCELoss(weight=0.7, class_weights=class_weights) if loss is None else loss
 
     metrics = [smp.utils.metrics.IoU(threshold=0.5),]
     
