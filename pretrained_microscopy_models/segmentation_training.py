@@ -405,8 +405,8 @@ def train_segmentation_model(model,
         train_logs = train_epoch.run(train_loader)
         valid_logs = valid_epoch.run(valid_loader)
 
-        total_train_loss = sum(train_logs['DiceBCELoss'])
-        total_valid_loss = sum(valid_logs['DiceBCELoss'])
+        total_train_loss = train_logs['DiceBCELoss']
+        total_valid_loss = valid_logs['DiceBCELoss']
 
         # update the state
         state['epoch'] = epoch + 1
