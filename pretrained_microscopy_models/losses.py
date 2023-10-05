@@ -18,7 +18,7 @@ class DiceBCELoss(nn.Module):
         
         # Compute the weighted BCE loss
         if self.class_weights is not None:
-            weights = self.class_weights[targets.long()].float()
+            weights = self.class_weights[targets.long()].view(-1).float()  # Flatten the weights tensor
             BCE = F.binary_cross_entropy(inputs_flat, targets_flat, reduction='none')
             BCE = (BCE * weights).mean()
         else:
