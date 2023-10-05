@@ -374,7 +374,7 @@ def train_segmentation_model(model,
         verbose=True,
     )
 
-    valid_epoch = smp.utils.train.TrainEpoch(
+    valid_epoch = smp.utils.train.ValidEpoch(
         model, 
         loss=loss, 
         metrics=metrics, 
