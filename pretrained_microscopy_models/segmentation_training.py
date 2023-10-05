@@ -350,9 +350,22 @@ def train_segmentation_model(model,
     optimizer = torch.optim.Adam([ 
         dict(params=model.parameters(), lr=lr),])
     
+    class CustomTrainEpoch(smp.utils.train.TrainEpoch):
+        def batch_update(self, x, y):
+            self.optimizer.zero_grad()
+            prediction = self.model.forward(x)
+            losses = self.loss(prediction, y)
+            
+            # Sum up the individual losses
+            total_loss = sum(losses)
+            
+            total_loss.backward()
+            self.optimizer.step()
+            return total_loss, prediction
+        
     # create epoch runners 
     # it is a simple loop of iterating over dataloader`s samples
-    train_epoch = smp.utils.train.TrainEpoch(
+    train_epoch = CustomTrainEpoch(
         model, 
         loss=loss, 
         metrics=metrics, 
@@ -361,7 +374,7 @@ def train_segmentation_model(model,
         verbose=True,
     )
 
-    valid_epoch = smp.utils.train.ValidEpoch(
+    valid_epoch = CustomTrainEpoch(
         model, 
         loss=loss, 
         metrics=metrics, 
